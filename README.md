@@ -1,4 +1,4 @@
-# 🔍 L#eakCare
+# 🔍 LeakCare
 AI 기반 딥페이크 및 불법 유출물 통합 탐지·대응 플랫폼
 
 ### 🛠 Tech Stack
