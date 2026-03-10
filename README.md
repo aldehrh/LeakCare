@@ -8,10 +8,10 @@ AI 기반 딥페이크 및 불법 유출물 통합 탐지·대응 플랫폼
 - Tools: GitHub, Discord, Swagger
 
 ### 👥 Team Members
-- 이서현: 
-- 박민서: 
-- 남지민: 
 - 김수진: 
+- 남지민:
+- 박민서:
+- 이서현: 
 
 - 역할 1: PM, Backend, Evidence Reporting
 - 역할 2: AI Model, Facial Feature Vectorizing
