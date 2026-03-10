@@ -48,19 +48,40 @@ AI 기반 딥페이크 및 불법 유출물 통합 탐지·대응 플랫폼
        
 
 - ### 시스템 구조 설계
-  leakcare/
-  ├── backend/                # FastAPI Root
-  │   ├── app/
-  │   │   ├── api/            # API Router (v1)
-  │   │   ├── core/           # Security (SHA-256), AI Model Loader
-  │   │   ├── models/         # MongoDB Schemas (Pydantic)
-  │   │   ├── services/       # Playwright Scraper, Vector Comparator
-  │   │   └── main.py
-  │   ├── requirements.txt
-  │   └── .env
-  ├── frontend/               # React Root (Vite + Tailwind)
-  │   ├── src/
-  │   │   ├── components/     # Dashboard, Report Card
-  │   │   ├── hooks/          # API Fetching
-  │   │   └── App.jsx
-  └── docker-compose.yml      # 로컬 개발 환경 통합 (MongoDB Atlas 연결용)
+ leakcare/ (Root)
+├── .gitignore               # GitHub 제외 파일 설정 (Kaggle 데이터, .env 등)
+├── README.md                # 전체 프로젝트 실행 및 설치 가이드
+├── requirements.txt         # 전체 라이브러리 목록 (pip install -r)
+│
+├── system/ (이서현)  
+│   ├── browser/             # 브라우저 구동 관련
+│   │   ├── manager.py       # Playwright 브라우저 생성 및 세션 관리
+│   │   └── stealth.py       # SNS 봇 탐지 우회(Stealth) 설정
+│   ├── core/                # 핵심 수집 기능
+│   │   ├── capture.py       # 스크린샷 캡처 및 PDF 박제 로직 [cite: 62]
+│   │   └── extractor.py     # IP, 서버 위치, 타임스탬프 추출 [cite: 62]
+│   └── utils/               # 공통 도구
+│       └── file_path.py     # 캡처 파일 임시 저장 경로 관리
+│
+├── ai_model/ (김수진)      
+│   ├── models/              # 학습된 가중치 파일 저장용 폴더
+│   ├── preprocessor.py      # 이미지 리사이징 및 68개 특징점 전처리 [cite: 88]
+│   ├── analyzer.py          # 특징점 추출 및 유사도 계산 [cite: 60]
+│   └── loader.py            # PyTorch 모델 로드 및 GPU 설정 [cite: 87]
+│
+├── backend/ (박민서)    
+│   ├── api/                 # API 엔드포인트별 분리
+│   │   ├── analysis.py      # 유출 분석 요청 및 상태 관리 [cite: 94]
+│   │   ├── user.py          # 사용자 얼굴 등록 관리 [cite: 58]
+│   │   └── report.py        # PDF 보고서 생성 및 메일 발송 [cite: 62, 64]
+│   ├── db/                  # MongoDB 연동 로직 [cite: 90]
+│   ├── core/                # SHA-256 해시, 보안 설정, .env 로드
+│   └── main.py              # FastAPI 서버 진입점 [cite: 93]
+│
+└── frontend/ (남지민)  
+    ├── src/
+    │   ├── api/             # 백엔드 호출 함수 모음
+    │   ├── components/      # UI 조각 (입력창, 결과 카드)
+    │   ├── pages/           # 전체 화면 (대시보드, 등록 페이지) [cite: 100]
+    │   └── styles/          # Tailwind CSS 디자인 설정 [cite: 99]
+    └── package.json         # 리액트 패키지 관리
