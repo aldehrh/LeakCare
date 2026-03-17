@@ -47,6 +47,7 @@ AI 기반 딥페이크 및 불법 유출물 통합 탐지·대응 플랫폼
 ├── requirements.txt         # 전체 라이브러리 목록 (pip install -r)
 │
 ├── system/ (이서현) 
+│   ├── main.py              # 최상위 파일
 │   ├── __init__.py          # 패키지 인식용
 │   ├── browser/             # 브라우저 구동 관련
 │   │   ├── manager.py       # Playwright 브라우저 생성 및 세션 관리
