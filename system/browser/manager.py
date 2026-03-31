@@ -20,7 +20,8 @@ class BrowserManager:
         self.browser = await self.playwright.chromium.launch(headless=False)
 
         context = await self.browser.new_context(
-            viewport={'width': 1280, 'height': 800},
+            viewport={'width': 1290, 'height': 800},
+            #user_agent=self.us
         )
 
         page = await context.new_page()
