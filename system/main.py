@@ -1,211 +1,186 @@
 import asyncio
 import argparse
 import httpx
+import ai_module
+import time
+import os
+from system.utils.report import generate_pdf_report
 
-# 브라우저 실행/종료 관리
+# 시스템 내부 모듈 임포트
 from system.browser.manager import BrowserManager
-
-# 페이지 캡처 관련
 from system.core.capture import take_screenshot
-
-# 데이터 추출 관련
 from system.core.extractor import (
-    extract_metadata,      # IP 추출
-    get_location,          # IP → 위치 변환
-    extract_images,        # 이미지 URL 추출
-    extract_links_with_pagination  # 게시판 링크 수집
+    extract_metadata, 
+    get_location, 
+    extract_images, 
+    extract_links_with_pagination
 )
-
-# 파일/진행상태 관리
 from system.utils.file_path import (
-    generate_evidence_path,
-    save_progress,
-    load_progress,
-    delete_progress
+    generate_evidence_path
 )
 
-# 이미지 다운로드 함수
+# ─────────────────────────────
+# [기능 1] 이미지 다운로드 함수
+# ─────────────────────────────
 async def download_image(url):
-    """
-    이미지 URL을 받아 실제 이미지 데이터를 다운로드
-    """
     try:
-        async with httpx.AsyncClient(timeout=5) as client:
+        async with httpx.AsyncClient(timeout=5.0) as client:
             res = await client.get(url)
             if res.status_code == 200:
-                return res.content  # 이미지 binary 데이터 반환
+                return res.content
     except:
         pass
     return None
 
+# ─────────────────────────────
+# [기능 2] 백엔드 API 연동 함수
+# ─────────────────────────────
+async def send_to_backend(target_url, name, evidence_info):
+    """백엔드 서버로 분석 요청 및 메타데이터 전송"""
+    base_url = ""
+    analyze_url = f"{base_url}/api/v1/detection/analyze"
+    metadata_url = f"{base_url}/api/v1/detection/metadata"
+    
+    async with httpx.AsyncClient() as client:
+        try:
+            # 1단계: 분석 요청
+            analyze_payload = {"url": target_url, "target_name": name}
+            res_analyze = await client.post(analyze_url, json=analyze_payload, timeout=10.0)
+            
+            if res_analyze.status_code == 200:
+                task_id = res_analyze.json().get('task_id')
+                print(f"✅ [API] 분석 요청 성공! (Task ID: {task_id})")
+                
+                # 2단계: 메타데이터 전송
+                metadata_payload = {
+                    "task_id": task_id,
+                    "ip_address": evidence_info['ip'],
+                    "country": evidence_info['country'],
+                    "city": evidence_info['city'],
+                    "screenshot_path": evidence_info['screenshot_path'],
+                    "target_url": target_url,
+                    "collected_at": evidence_info['timestamp']
+                }
+                res_meta = await client.post(metadata_url, json=metadata_payload, timeout=10.0)
 
+                if res_meta.status_code in [200, 201]:
+                    print(f"✅ [API] DB 메타데이터 저장 완료! (IP: {evidence_info['ip']})")
+                else:
+                    print(f"⚠️ [API] 메타데이터 저장 실패: {res_meta.status_code}")
+                return task_id
+            else:
+                print(f"❌ [API] 분석 요청 실패: {res_analyze.status_code}")
+        except Exception as e:
+            print(f"❌ [API] 연동 중 오류 발생: {e}")
+    return None
+
+# ─────────────────────────────
+# [기능 3] 개별 페이지 이미지 수집
+# ─────────────────────────────
 async def collect_images_from_page(page, url):
-    """
-    특정 게시글 페이지에 접속해서 이미지들을 추출
-    """
     try:
-        # 페이지 이동 (DOM 로딩까지만 기다림 → 속도 최적화)
         await page.goto(url, wait_until="domcontentloaded", timeout=15000)
-
-        # 이미지 URL 추출
         images = await extract_images(page)
         return images
     except:
         return []
 
-
+# ─────────────────────────────
+# [메인] 시스템 실행 엔진
+# ─────────────────────────────
 async def main():
-    """
-    프로그램 전체 실행 흐름
-    """
-
-    # ─────────────────────────────
-    # 1. 실행 옵션 설정 (CLI 입력)
-    # ─────────────────────────────
     parser = argparse.ArgumentParser(description="LeakCare 엔진")
-
     parser.add_argument("url", help="채증할 URL 입력")
-
-    parser.add_argument(
-        "--mode",
-        choices=["single", "board"],
-        default="single",
-        help="single: 단일 페이지 | board: 게시판"
-    )
-
+    parser.add_argument("--mode", choices=["single", "board"], default="single")
     parser.add_argument("--start", type=int, default=1)
     parser.add_argument("--end", type=int, default=5)
-
-    parser.add_argument("--resume", action="store_true")
-
     args = parser.parse_args()
 
-    # ─────────────────────────────
-    # 2. 브라우저 실행
-    # ─────────────────────────────
     bm = BrowserManager()
     page = await bm.start()
 
     try:
-        # ─────────────────────────────
-        # 3. 페이지 캡처 + IP 추출
-        # ─────────────────────────────
+        # 1. 사이트 접속 및 증거 채증
         output_path, filename = generate_evidence_path()
-
-        # 스크린샷 찍기
         response = await take_screenshot(page, args.url, output_path)
-
-        # 서버 IP 추출
+        
         ip = await extract_metadata(response)
-
-        # IP → 국가/도시 변환
         country, city = get_location(ip)
+        current_time = time.strftime('%Y-%m-%d %H:%M:%S')
+        current_dir = os.getcwd()
 
         print(f"✅ 채증 성공! | IP: {ip} | 위치: {country}({city})")
-        print(f"📂 저장파일명: {filename}")
 
-        all_images = []
+        raw_images = []
 
-        # ─────────────────────────────
-        # 4. single 모드 (단일 페이지)
-        # ─────────────────────────────
+        # 2. 모드별 이미지 수집 
         if args.mode == "single":
-            print(f"\n🖼 단일 페이지 이미지 수집 중...")
-
+            print(f"\n🗂️ 단일 페이지 이미지 수집 중...")
             imgs = await extract_images(page)
+            raw_images.extend([(img_url, args.url) for img_url, src in imgs] if isinstance(imgs[0], tuple) else [(img, args.url) for img in imgs])
 
-            # (이미지URL, 출처페이지) 형태로 저장
-            all_images.extend([(img, args.url) for img in imgs])
-
-            print(f"   수집된 이미지: {len(imgs)}개")
-
-        # ─────────────────────────────
-        # 5. board 모드 (게시판 크롤링)
-        # ─────────────────────────────
         elif args.mode == "board":
-
-            start_index = 0
-            linked_pages = []
-
-            # ── 이어서 실행 옵션 ──
-            if args.resume:
-                progress, prog_file = load_progress(args.url, args.start, args.end)
-
-                if progress:
-                    linked_pages = progress["linked_pages"]
-                    start_index = progress["last_index"] + 1
-
-                    print(f"🔄 이어서 실행 | {start_index}번째부터")
-                else:
-                    print("⚠ 저장된 진행 상태 없음")
-
-            # ── 처음 실행이면 링크 수집 ──
-            if not args.resume or not linked_pages:
-                print(f"\n🔗 링크 수집 중...")
-
-                linked_pages = await extract_links_with_pagination(
-                    page, args.url, args.start, args.end
-                )
-
-                print(f"총 게시물: {len(linked_pages)}개")
-                start_index = 0
-
-            # ── 게시글 순회하면서 이미지 수집 ──
-            print(f"\n🖼 이미지 수집 시작")
-
-            for idx in range(start_index, len(linked_pages)):
-                link = linked_pages[idx]
-
-                print(f"[{idx+1}] {link[:60]}...")
-
+            linked_pages = await extract_links_with_pagination(page, args.url, args.start, args.end)
+            print(f"\n🗂️ 이미지 수집 시작 (총 {len(linked_pages)}개 게시물)")
+            for idx, link in enumerate(linked_pages):
+                print(f"   [{idx+1}/{len(linked_pages)}] 게시글 탐색 중...", end="\r")
                 imgs = await collect_images_from_page(page, link)
+                raw_images.extend([(img, link) for img in imgs])
+            print("\n✅ 모든 게시물 탐색 완료!")
 
-                all_images.extend([(img, link) for img in imgs])
+        # 3. 분석 대상 필터링
+        exclude_keywords = ["google", "gstatic", "ad-", "banner", "logo", "favicon", "reply", ".gif"]
+        unique_images = list(set(raw_images)) 
+        all_images = [
+            img for img in unique_images 
+            if not any(key in img[0].lower() for key in exclude_keywords)
+        ]
 
-                # 안전장치 (과도한 수집 방지)
-                if len(all_images) > 500:
-                    print("⚠ 500개 초과 → 중단")
-
-                    save_progress(
-                        linked_pages, idx,
-                        args.url, args.start, args.end
-                    )
-                    break
-            else:
-                # 정상 완료 시 진행 상태 삭제
-                delete_progress(args.url, args.start, args.end)
-                print("✅ 전체 완료")
-
-        print(f"\n🖼 총 이미지: {len(all_images)}개")
-
-        # ─────────────────────────────
-        # 6. AI 분석 (현재 TODO)
-        # ─────────────────────────────
+        # 4. AI 분석 실행
         matched = []
+        start_time = time.time()
+        print(f"🔍 AI 분석 시작 (대상: {len(all_images)}건)...")
 
         for idx, (img_url, source_page) in enumerate(all_images):
             img_data = await download_image(img_url)
+            if img_data and len(img_data) > 10240:
+                analysis = await ai_module.analyze_face(img_data)
+                results = analysis.get('results', [])
+                for face in results:
+                    score = face.get('score', 0)
+                    if score >= 0.85:
+                        print(f"   ⚠️ 유출 의심 발견! [{idx+1}] 점수: {score} | URL: {img_url[:40]}...")
+                        matched.append({"url": img_url, "page": source_page, "score": score})
 
-            if img_data is None:
-                continue
+        end_time = time.time()
+        print("-" * 50)
+        print(f"✅ 분석 완료! (소요 시간: {int(end_time - start_time)}초)")
+        print(f"🚨 총 {len(matched)}건의 유출 의심 사례를 발견했습니다.")
 
-            # TODO: 얼굴 유사도 분석
-            # similarity = ai_module.compare(...)
-            # if similarity >= 0.85:
-            #     matched.append(...)
+        # 5. 백엔드 연동
+        evidence_info = {
+            "ip": ip,
+            "country": country,
+            "city": city,
+            "screenshot_path": os.path.join(current_dir, filename),
+            "timestamp": current_time
+        }
+        await send_to_backend(args.url, "이서현", evidence_info)
 
-        print("-" * 40)
-        print(f"🔍 매칭 결과: {len(matched)}개")
-        print("-" * 40)
+        # 6. PDF 보고서 생성
+        report_filename = filename.replace(".png", "_report.pdf")
+        pdf_save_path = os.path.join(current_dir, report_filename)
+        
+        report_data = {
+            "target_url": args.url, "ip": ip, "location": f"{country}({city})",
+            "screenshot_path": evidence_info['screenshot_path']
+        }
+        generate_pdf_report(report_data, matched, pdf_save_path)
 
     except Exception as e:
-        print(f"❌ 오류: {e}")
-
+        print(f"❌ 엔진 오류 발생: {e}")
     finally:
-        # 브라우저 종료 (메모리 누수 방지)
-        await bm.stop()
+        await bm.stop() 
 
-
-# 프로그램 시작점
 if __name__ == "__main__":
     asyncio.run(main())
