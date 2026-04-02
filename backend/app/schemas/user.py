@@ -22,3 +22,8 @@ class UserResponse(UserBase):
 # 수정용 규칙
 class UserUpdate(BaseModel):
     name: Optional[str] = None
+    
+# 로그인할 때
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str

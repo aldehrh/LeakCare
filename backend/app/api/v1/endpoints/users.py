@@ -1,7 +1,9 @@
 from fastapi import APIRouter, HTTPException
-from app.schemas.user import UserCreate, UserResponse, UserUpdate
+from app.schemas.user import UserCreate, UserResponse, UserUpdate, UserLogin
 from app.core.database import db_instance
 from app.core.security import get_password_hash
+from app.core.security import verify_password
+from app.core.security import create_access_token
 from bson import ObjectId # 몽고디비 ID 변환용
 
 router = APIRouter()
@@ -30,6 +32,8 @@ async def register_user(user_in: UserCreate):
     user_data["_id"] = str(result.inserted_id)
     return user_data
 
+
+
 @router.get("/{user_id}", response_model=UserResponse)
 async def get_user(user_id: str):
 
@@ -49,6 +53,8 @@ async def get_user(user_id: str):
 
     # 5. 조회된 데이터 반환 (Pydantic이 자동으로 id로 매핑)
     return user
+
+
 
 @router.patch("/{user_id}", response_model=UserResponse)
 async def update_user(user_id: str, user_in: UserUpdate):
@@ -78,6 +84,8 @@ async def update_user(user_id: str, user_in: UserUpdate):
     
     return updated_user
 
+
+
 @router.delete("/{user_id}", status_code=204)
 async def delete_user(user_id: str):
 
@@ -93,3 +101,28 @@ async def delete_user(user_id: str):
 
     # 3. 삭제 성공 시 보통 본문 없이 204 No Content를 반환합니다.
     return None
+
+
+
+@router.post("/login")
+async def login(user_in: UserLogin):
+    
+    # 1. 이메일로 유저 찾기
+    user = await db_instance.db.users.find_one({"email": user_in.email})
+    if not user:
+        raise HTTPException(status_code=401, detail="이메일 또는 비밀번호가 잘못되었습니다.")
+
+    # 2. 비밀번호 검증 (입력값 vs DB 해시값)
+    if not verify_password(user_in.password, user["hashed_password"]):
+        raise HTTPException(status_code=401, detail="이메일 또는 비밀번호가 잘못되었습니다.")
+
+    # 3. JWT 토큰 생성
+    access_token = create_access_token(data={"sub": user["email"]})
+    
+    # 4. 로그인 성공 응답
+    return {
+        "access_token": access_token, 
+        "token_type": "bearer",
+        "user_id": str(user["_id"]), 
+        "name": user["name"]
+    }
