@@ -1,4 +1,4 @@
-- ### ❗️ 시작
+- ### ‼️ 시작
   1. 환경 설정
     pip install playwright insightface onnxruntime-gpu opencv-python reportlab httpx playwright install chromium
   2. 실행 방법
@@ -7,7 +7,7 @@
     python main.py "https://example.com/board" --mode board --start 1 --end 5
 
 
-- ### 파일 구조
+- ### ‼️ 파일 구조
   LeakCare/
   ├── main.py                # 시스템 실행 메인 엔진
   ├── ai_module.py           # InsightFace 기반 AI 분석 모듈
@@ -23,7 +23,7 @@
   │       └── report.py      # PDF 보고서 생성 엔진
   └── README.md
 
-❗️ ### 핵심 기능
+- ### ‼️ 핵심 기능
   1. 웹 크롤링 및 채증
   2. AI 얼굴 분석
   3. 실시간 데이터 동기화 및 보고서
