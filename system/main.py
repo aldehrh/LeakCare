@@ -1,7 +1,3 @@
-# python3 main.py "https://postimg.cc/gallery/9WfG94r" --mode single
-# python3 main.py "https://www.clien.net/service/board/park?po=0" --mode board --start 1 --end 2
-
-
 import asyncio
 import argparse
 import httpx
@@ -41,15 +37,24 @@ async def download_image(url):
 # ─────────────────────────────
 async def send_to_backend(target_url, name, evidence_info):
     # 백엔드 서버로 분석 요청 및 메타데이터 전송
-    base_url = "https://5528-121-67-233-19.ngrok-free.app"
+    base_url = "https://78fa-121-67-233-19.ngrok-free.app"
     analyze_url = f"{base_url}/api/v1/detection/analyze"
     metadata_url = f"{base_url}/api/v1/detection/metadata"
-    
+    login_url = f"{base_url}/api/v1/users/login"
+
     async with httpx.AsyncClient() as client:
         try:
+            # 0단계: 로그인
+            login_res = await client.post(login_url, data={
+                "username": "str@example.com",
+                "password": "string"
+            }, timeout=10.0)
+            token = login_res.json().get("access_token")
+            headers = {"Authorization": f"Bearer {token}"}
+
             # 1단계: 분석 요청
             analyze_payload = {"url": target_url, "target_name": name}
-            res_analyze = await client.post(analyze_url, json=analyze_payload, timeout=10.0)
+            res_analyze = await client.post(analyze_url, json=analyze_payload, headers=headers, timeout=10.0)
             
             if res_analyze.status_code == 200:
                 task_id = res_analyze.json().get('task_id')
@@ -57,7 +62,7 @@ async def send_to_backend(target_url, name, evidence_info):
                 
                 # 2단계: 메타데이터 전송
                 metadata_payload = {
-                    "task_id": task_id, # BE 추가 예정 !!!!!!!!!!!!!!!!!!!!!!
+                    "task_id": task_id, 
                     "ip_address": evidence_info['ip'],
                     "country": evidence_info['country'],
                     "city": evidence_info['city'],
@@ -65,7 +70,7 @@ async def send_to_backend(target_url, name, evidence_info):
                     "target_url": target_url,
                     "collected_at": evidence_info['timestamp']
                 }
-                res_meta = await client.post(metadata_url, json=metadata_payload, timeout=10.0)
+                res_meta = await client.post(metadata_url, json=metadata_payload, headers=headers, timeout=10.0)
 
                 if res_meta.status_code in [200, 201]:
                     print(f"☑️ [API] DB 메타데이터 저장 완료! (IP: {evidence_info['ip']})")
