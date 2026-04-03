@@ -1,4 +1,6 @@
 - ### ‼️ 시작
+  ### source .venv/bin/activate 
+
   1. 환경 설정
     pip install playwright insightface onnxruntime-gpu opencv-python reportlab httpx playwright install chromium
   2. 실행 방법
@@ -63,33 +65,3 @@
   [백엔드 전송]
       ↓
   [PDF 보고서 생성]
-
-
-- ### ‼️ API 연동
-  1. 분석 요청
-    POST /api/v1/detection/analyze
-
-    {
-    "url": "https://example.com",
-    "target_name": "이서현"
-    }
-  2. 메타데이터 전송
-    POST /api/v1/detection/metadata
-
-    {
-    "task_id": "...",                // BE가 추가했다고 해서 4/3 테스트 진행 예정
-    "ip_address": "...",
-    "country": "...",
-    "city": "...",
-    "screenshot_path": "...",
-    "target_url": "...",
-    "collected_at": "..."
-    }  
-
-
-- ### ‼️ 주요 특징
-  - 비동기 처리 기반 (asyncio + httpx)
-  - 실제 브라우저 기반 크롤링 (탐지 회피)
-  - 이미지 단위 실시간 분석 + 전송
-  - 확장 가능한 구조 (모듈화 설계)
-  - PDF 자동 리포팅
