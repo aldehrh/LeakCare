@@ -1,0 +1,151 @@
+.report-list-main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 32px 24px;
+}
+
+.report-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+
+.report-list-title {
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: #1a1a18;
+  margin-bottom: 5px;
+  letter-spacing: -0.02em;
+}
+
+.report-list-sub {
+  font-size: 0.82rem;
+  color: #a0a09a;
+}
+
+.report-filter-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.report-filter-btn {
+  padding: 5px 14px;
+  border-radius: 99px;
+  font-size: 0.82rem;
+  cursor: pointer;
+  border: 0.5px solid #e0e0da;
+  background: transparent;
+  color: #6b6b66;
+  transition: all 0.15s;
+}
+
+.report-filter-btn:hover {
+  border-color: #6d5bd0;
+  color: #6d5bd0;
+}
+
+.report-filter-btn.active {
+  background: #6d5bd0;
+  color: #ffffff;
+  border-color: #6d5bd0;
+}
+
+.report-table-wrap {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 0.5px solid #e8e8e4;
+  overflow: hidden;
+}
+
+.report-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.report-table th {
+  text-align: left;
+  padding: 11px 24px;
+  color: #a0a09a;
+  font-weight: 400;
+  font-size: 0.78rem;
+  border-bottom: 0.5px solid #f0f0ec;
+  background: #fafaf8;
+}
+
+.report-table td {
+  padding: 15px 24px;
+  border-bottom: 0.5px solid #f7f7f5;
+  font-size: 0.875rem;
+  color: #1a1a18;
+  vertical-align: middle;
+}
+
+.report-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.report-table tbody tr:hover td {
+  background: #fafaf8;
+  cursor: pointer;
+}
+
+.report-id {
+  font-size: 0.78rem !important;
+  color: #a0a09a !important;
+}
+
+.report-url {
+  color: #1a1a18;
+  font-weight: 500;
+  max-width: 400px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.report-date {
+  color: #a0a09a !important;
+  font-size: 0.82rem !important;
+}
+
+.report-verdict {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 99px;
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+
+.report-verdict::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+.report-verdict.leak { background: #fef2f2; color: #dc2626; }
+.report-verdict.safe { background: #f0fdf4; color: #16a34a; }
+
+.report-detail-btn {
+  padding: 5px 14px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: 0.5px solid #e0e0da;
+  background: transparent;
+  color: #6b6b66;
+  transition: all 0.15s;
+}
+
+.report-detail-btn:hover {
+  border-color: #6d5bd0;
+  color: #6d5bd0;
+  background: #f5f3ff;
+}

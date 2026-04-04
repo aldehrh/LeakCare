@@ -1,48 +1,74 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import '../styles/ReportList.css';
 
 function ReportList() {
   const navigate = useNavigate();
+  const [filter, setFilter] = useState('전체');
 
-  // 테스트용 데이터 API연결 예정
   const dummyReports = [
     { id: 1, url: 'https://example.com/site1', result: '유출 확인', date: '2026-03-25' },
     { id: 2, url: 'https://test-site.org/page', result: '미확인', date: '2026-03-26' },
   ];
 
+  const filtered = filter === '전체' ? dummyReports : dummyReports.filter(r => r.result === filter);
+
   return (
-    <div className="report-list-container" style={{ padding: '20px' }}>
-      <h2>결과 보고서 목록</h2>
-      <p>탐지 완료된 리스트를 확인하고 상세 보고서를 열람하세요.</p>
-      
-      <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px' }}>
-        <thead>
-          <tr style={{ borderBottom: '2px solid #eee', textAlign: 'left' }}>
-            <th style={{ padding: '12px' }}>ID</th>
-            <th style={{ padding: '12px' }}>탐지 URL</th>
-            <th style={{ padding: '12px' }}>판정 결과</th>
-            <th style={{ padding: '12px' }}>생성일</th>
-            <th style={{ padding: '12px' }}>상세 보기</th>
-          </tr>
-        </thead>
-        <tbody>
-          {dummyReports.map((report) => (
-            <tr key={report.id} style={{ borderBottom: '1px solid #eee' }}>
-              <td style={{ padding: '12px' }}>{report.id}</td>
-              <td style={{ padding: '12px' }}>{report.url}</td>
-              <td style={{ padding: '12px' }}>
-                <span style={{ color: report.result === '유출 확인' ? 'red' : 'green' }}>
-                  {report.result}
-                </span>
-              </td>
-              <td style={{ padding: '12px' }}>{report.date}</td>
-              <td style={{ padding: '12px' }}>
-                <button onClick={() => navigate(`/reports/${report.id}`)}>확인</button>
-              </td>
+    <div className="report-list-main">
+      <div className="report-list-header">
+        <div>
+          <h2 className="report-list-title">결과 보고서</h2>
+          <p className="report-list-sub">탐지 완료된 리스트를 확인하고 상세 보고서를 열람하세요.</p>
+        </div>
+      </div>
+
+      <div className="report-filter-bar">
+        {['전체', '유출 확인', '미확인'].map(f => (
+          <button
+            key={f}
+            className={`report-filter-btn ${filter === f ? 'active' : ''}`}
+            onClick={() => setFilter(f)}
+          >
+            {f}
+          </button>
+        ))}
+      </div>
+
+      <div className="report-table-wrap">
+        <table className="report-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>탐지 URL</th>
+              <th>판정 결과</th>
+              <th>생성일</th>
+              <th></th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {filtered.map((report) => (
+              <tr key={report.id} onClick={() => navigate(`/reports/${report.id}`)}>
+                <td className="report-id">#{report.id}</td>
+                <td className="report-url">{report.url}</td>
+                <td>
+                  <span className={`report-verdict ${report.result === '유출 확인' ? 'leak' : 'safe'}`}>
+                    {report.result}
+                  </span>
+                </td>
+                <td className="report-date">{report.date}</td>
+                <td>
+                  <button
+                    className="report-detail-btn"
+                    onClick={(e) => { e.stopPropagation(); navigate(`/reports/${report.id}`); }}
+                  >
+                    상세 보기
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

@@ -21,7 +21,7 @@
   margin-bottom: 40px;
 }
 
-/* 입력 폼  */
+/* 입력 폼 */
 .detect-form {
   background: #ffffff;
   padding: 40px;
@@ -66,54 +66,34 @@
   box-shadow: 0 0 0 4px rgba(92, 92, 255, 0.1);
 }
 
-/* 드롭다운 스타일  */
-.face-select-dropdown {
-  width: 100%;
-  padding: 16px;
-  border: 1.5px solid #E2E8F0;
-  border-radius: 14px;
-  font-size: 15px;
-  color: #1E293B;
-  background-color: #F8FAFC;
-  cursor: pointer;
-  appearance: none; /* 기본 브라우저 화살표 제거 */
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2364748B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 16px center;
-  transition: all 0.2s ease;
-}
-
-.face-select-dropdown:focus {
-  outline: none;
-  border-color: #5C5CFF;
-  background-color: #ffffff;
-}
-
-/* 선택된 사진 미리보기 영역 */
+/* 분석 대상 사진 미리보기 영역  */
 .selected-preview-min {
   display: flex;
-  align-items: center;
+  flex-direction: column; /* 텍스트와 이미지를 세로로 배치 */
   gap: 16px;
   margin-top: 16px;
-  padding: 16px;
+  padding: 20px;
   background: #F0F5FF;
   border-radius: 16px;
   border: 1px dashed #5C5CFF;
   animation: fadeIn 0.3s ease-out;
 }
 
+/* 여러 장의 썸네일 나열 스타일 */
 .selected-preview-min img {
-  width: 56px;
-  height: 56px;
+  width: 48px;
+  height: 48px;
   border-radius: 10px;
   object-fit: cover;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  border: 2px solid white;
 }
 
 .selected-preview-min span {
   font-size: 14px;
   color: #5C5CFF;
   font-weight: 600;
+  display: block;
 }
 
 /* 제출 버튼 */
@@ -195,5 +175,10 @@
   
   .detect-wrapper h1 {
     font-size: 1.5rem;
+  }
+
+  .selected-preview-min img {
+    width: 40px;
+    height: 40px;
   }
 }

@@ -33,16 +33,18 @@ export const registerUser = async ({ name, email, password }) => {
 
 // 로그인
 export const loginUser = async ({ email, password }) => {
+  const formData = new URLSearchParams();
+  formData.append('username', email);
+  formData.append('password', password);
+  formData.append('grant_type', 'password');
+
   const response = await fetch(`${BASE_URL}/users/login`, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
       Accept: 'application/json',
+      'Content-Type': 'application/x-www-form-urlencoded',
     },
-    body: JSON.stringify({
-      email,
-      password,
-    }),
+    body: formData,
   });
 
   const text = await response.text();

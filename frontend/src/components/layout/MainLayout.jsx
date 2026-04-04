@@ -30,6 +30,9 @@ function MainLayout() {
             <NavLink to="/detect" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
               탐지 요청
             </NavLink>
+            <NavLink to="/jobs" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
+              작업 목록
+            </NavLink>
             <NavLink to="/reports" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
               결과 보고서
             </NavLink>

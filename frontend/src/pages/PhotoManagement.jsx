@@ -37,9 +37,8 @@ function PhotoManagement({ photos, setPhotos }) {
     setIsAnalyzing(true);
     setFaceDetectionError(null);
 
-    // 2.5초후 반환하도록 테스트 진행 (80% 확률로 성공 가정)
     setTimeout(() => {
-      const isFaceDetected = Math.random() > 0.2; 
+      const isFaceDetected = Math.random() > 0.2;
 
       if (isFaceDetected) {
         const newPhoto = {
@@ -53,7 +52,6 @@ function PhotoManagement({ photos, setPhotos }) {
         setPendingFile(null);
         alert("얼굴 분석이 완료되었습니다.");
       } else {
-        // 실패 시: CSS에 정의된 메시지 출력을 위한 상태 업데이트
         setFaceDetectionError("얼굴을 찾을 수 없습니다. 다시 시도해 주세요.");
       }
       setIsAnalyzing(false);
@@ -62,7 +60,6 @@ function PhotoManagement({ photos, setPhotos }) {
 
   return (
     <div className="photos-wrapper">
-      {/* AI 분석 중 로딩  */}
       {isAnalyzing && (
         <div className="analysis-overlay">
           <div className="analysis-card">
@@ -72,6 +69,10 @@ function PhotoManagement({ photos, setPhotos }) {
             </div>
             <h3 className="analysis-title">AI 얼굴 분석 중...</h3>
             <p className="analysis-subtext">본인 확인을 정밀하게 진행 중입니다.</p>
+            <div className="analysis-progress-track">
+              <div className="analysis-progress-fill" />
+            </div>
+            <p className="analysis-progress-text">분석 중...</p>
           </div>
         </div>
       )}
@@ -102,14 +103,11 @@ function PhotoManagement({ photos, setPhotos }) {
           </div>
         ) : pendingFile && (
           <div className="pending-file-preview">
-            {/* 에러 발생 시 빨간 테두리 적용 */}
             <div className={`preview-card ${faceDetectionError ? "has-error" : ""}`}>
               <img src={pendingFile.previewUrl} alt="Preview" />
               <button className="preview-close-btn" onClick={() => setPendingFile(null)}>
                 <X size={18} />
               </button>
-              
-              {/* 오류 시 메시지 출력 */}
               {faceDetectionError && (
                 <div className="error-badge">
                   <AlertCircle size={14} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' }} />
@@ -117,7 +115,6 @@ function PhotoManagement({ photos, setPhotos }) {
                 </div>
               )}
             </div>
-
             <div className="preview-action">
               <button className="scan-trigger-btn" onClick={handleStartScan}>
                 {faceDetectionError ? "다시 시도" : "얼굴 등록"}

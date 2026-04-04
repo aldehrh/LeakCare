@@ -1,169 +1,238 @@
-/* 메인 컨테이너 */
 .dashboard-main {
-  max-width: 1200px;
+  max-width: 1100px;
   margin: 0 auto;
+  padding: 32px 24px;
 }
 
-/* 상단 헤더 영역 */
 .content-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-end;
-  margin-bottom: 30px;
+  align-items: flex-start;
+  margin-bottom: 28px;
 }
 
 .header-title h2 {
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: #1e293b;
-  margin-bottom: 8px;
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: #1a1a18;
+  margin-bottom: 5px;
+  letter-spacing: -0.02em;
 }
 
 .header-title p {
-  color: #64748b;
-  font-size: 0.9rem;
+  color: #a0a09a;
+  font-size: 0.82rem;
 }
 
-/* 3열 카드 레이아웃 */
+/* 새 탐지 요청 버튼 */
+.btn-request-direct {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 20px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  background: #6d5bd0;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+}
+
+.btn-request-direct:hover {
+  background: #5a48b8;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(109, 91, 208, 0.35);
+}
+
+.btn-request-direct:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+/* 통계 카드 */
 .stats-container {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
-  margin-bottom: 40px;
+  gap: 14px;
+  margin-bottom: 24px;
 }
 
 .large-stat-card {
-  background: white;
-  padding: 32px 24px;
-  border-radius: 24px;
+  background: #ffffff;
+  padding: 22px;
+  border-radius: 16px;
+  border: 0.5px solid #e8e8e4;
   display: flex;
   align-items: center;
-  gap: 20px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.03);
-  transition: transform 0.2s;
+  gap: 16px;
+  transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
 }
 
 .large-stat-card:hover {
-  transform: translateY(-5px);
+  border-color: #b8b0e8;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(109, 91, 208, 0.08);
 }
 
 .stat-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 16px;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
+  font-size: 1.2rem;
+  flex-shrink: 0;
 }
 
-.dashboard-search-icon { background-color: #eff6ff; color: #3b82f6; }
-.dashboard-delete-icon { background-color: #fef2f2; color: #ef4444; }
-.dashboard-progress-icon { background-color: #fffbeb; color: #f59e0b; }
+.dashboard-search-icon { background: #eff6ff; }
+.delete-icon           { background: #fff7ed; }
+.progress-icon         { background: #f0fdf4; }
+
+.stat-info { display: flex; flex-direction: column; gap: 2px; }
 
 .stat-label {
-  color: #94a3b8;
-  font-size: 0.95rem;
-  font-weight: 500;
-  margin-bottom: 4px;
+  color: #6b6b66;
+  font-size: 0.82rem;
+  font-weight: 400;
 }
 
 .stat-value {
-  font-size: 1.6rem;
-  font-weight: 700;
-  color: #1e293b;
+  font-size: 1.75rem;
+  font-weight: 500;
+  color: #1a1a18;
+  letter-spacing: -0.03em;
+  line-height: 1;
 }
 
-/* 최근 탐지 로그 섹션 */
 .activity-section {
-  background: white;
-  padding: 32px;
-  border-radius: 24px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.03);
+  background: #ffffff;
+  border-radius: 16px;
+  border: 0.5px solid #e8e8e4;
+  overflow: hidden;
 }
 
-/* 전체보기 우측 상단 배치 */
 .section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  padding: 20px 24px 0;
 }
 
 .section-header h3 {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #1e293b;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #1a1a18;
 }
 
 .view-all {
-  font-size: 0.85rem;
-  color: #94a3b8;
+  font-size: 0.8rem;
+  color: #6d5bd0;
   text-decoration: none;
-  font-weight: 600;
+  font-weight: 500;
 }
 
-/* 테이블 스타일 */
-.activity-table {
-  width: 100%;
-  border-collapse: collapse;
-}
+.view-all:hover { text-decoration: underline; }
+
+.table-container { padding: 14px 0 0; }
+
+.activity-table { width: 100%; border-collapse: collapse; }
 
 .activity-table th {
   text-align: left;
-  padding: 16px;
-  color: #64748b;
-  font-weight: 600;
-  border-bottom: 1px solid #f1f5f9;
+  padding: 10px 24px;
+  color: #a0a09a;
+  font-weight: 400;
+  font-size: 0.78rem;
+  border-bottom: 0.5px solid #f0f0ec;
 }
 
 .activity-table td {
-  padding: 20px 16px;
-  border-bottom: 1px solid #f8fafc;
-  color: #334155;
+  padding: 14px 24px;
+  border-bottom: 0.5px solid #f7f7f5;
+  color: #1a1a18;
+  font-size: 0.875rem;
+  vertical-align: middle;
 }
 
-/* 원형 게이지 (CSS 변수 활용) */
+.activity-table tbody tr:last-child td { border-bottom: none; }
+.activity-table tbody tr:hover td { background: #fafaf8; }
+
+.file-name {
+  font-weight: 500;
+  color: #1a1a18 !important;
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.analysis-date {
+  color: #a0a09a !important;
+  font-size: 0.82rem !important;
+}
+
+/* 탐지 확률 바 */
 .progress-circle {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: conic-gradient(var(--accent-color) calc(var(--percent) * 1%), #e2e8f0 0);
   display: flex;
   align-items: center;
-  justify-content: center;
-  position: relative;
+  gap: 10px;
+  width: auto;
+  height: auto;
+  border-radius: 0;
+  background: none !important;
+  position: static;
 }
 
-.progress-circle::after {
-  content: "";
-  position: absolute;
-  width: 32px;
-  height: 32px;
-  background: white;
-  border-radius: 50%;
+.progress-circle::after { display: none; }
+
+.progress-circle::before {
+  content: '';
+  display: block;
+  width: 80px;
+  height: 5px;
+  border-radius: 99px;
+  flex-shrink: 0;
+  background: linear-gradient(
+    to right,
+    var(--accent-color) calc(var(--percent) * 1%),
+    #f0f0ec calc(var(--percent) * 1%)
+  );
 }
 
 .percent-text {
-  position: relative;
-  z-index: 1;
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: 0.82rem;
+  font-weight: 500;
+  position: static;
+  z-index: auto;
 }
 
-/* 상태별 색상 */
-.danger { --accent-color: #ef4444; color: #ef4444; }
-.warning { --accent-color: #f59e0b; color: #f59e0b; }
-.safe { --accent-color: #10b981; color: #10b981; }
+.danger  { --accent-color: #ef4444; color: #ef4444; }
+.warning { --accent-color: #f59e0b; color: #d97706; }
+.safe    { --accent-color: #22c55e; color: #16a34a; }
 
+/* 상태 배지 */
 .status-label {
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  background-color: currentColor; /* 글자색을 배경색으로 활용 */
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 99px;
+  font-size: 0.78rem;
+  font-weight: 500;
 }
-/* 상태 라벨 배경 투명도 처리 */
-.status-label.danger { background: #fef2f2; }
-.status-label.warning { background: #fffbeb; }
-.status-label.safe { background: #ecfdf5; }
+
+.status-label::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+.status-label.danger  { background: #fef2f2; color: #dc2626; }
+.status-label.warning { background: #fffbeb; color: #d97706; }
+.status-label.safe    { background: #f0fdf4; color: #16a34a; }

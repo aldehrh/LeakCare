@@ -95,7 +95,7 @@ function Dashboard() {
                     <td>
                       <div 
                         className={`progress-circle ${status.class}`} 
-                        style={{ '--percent': log.score }}
+                        ref={el => el && el.style.setProperty('--percent', log.score)}
                       >
                         <span className="percent-text">{log.score}%</span>
                       </div>

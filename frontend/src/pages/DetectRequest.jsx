@@ -1,34 +1,31 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Upload, AlertCircle, ImagePlus } from 'lucide-react';
+import { Search, ShieldCheck, AlertCircle, ImagePlus } from 'lucide-react';
 import '../styles/DetectRequest.css';
 
-// AppRouter에서 넘겨준 jobs와 setJobs를 props로 받기
+// AppRouter에서 넘겨준 props 유지
 const DetectRequest = ({ registeredPhotos, jobs, setJobs }) => {
   const navigate = useNavigate();
   const [url, setUrl] = useState('');
-  const [selectedPhotoId, setSelectedPhotoId] = useState('');
-
-  const selectedPhoto = registeredPhotos.find(p => p.id === Number(selectedPhotoId));
 
   // 폼 제출 
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    // 신규 작업 데이터 생성
     const newJob = {
-      id: Date.now(), // 고유 ID 생성
+      id: Date.now(), 
       url: url,
-      requestedAt: new Date().toLocaleString(), // 현재 시간 기록
-      status: 'pending', // 초기 상태
+      requestedAt: new Date().toLocaleString(), 
+      status: 'pending', 
       errorMessage: '',
     };
 
-    // jobs 에 새 작업 추가 
+    
     setJobs([newJob, ...jobs]);
 
-    // 사용자 알림 및 페이지 이동 
-    alert("탐지 요청이 정상적으로 제출되었습니다.");
-    navigate('/jobs'); // 작업 목록 페이지
+    alert("탐지 요청이 정상적으로 제출되었습니다. 등록된 모든 사진과 대조를 시작합니다.");
+    navigate('/jobs'); 
   };
 
   // 사진이 없을 때 예외 처리 
@@ -51,10 +48,9 @@ const DetectRequest = ({ registeredPhotos, jobs, setJobs }) => {
     <div className="detect-wrapper">
       <header className="page-header">
         <h1>새 탐지 요청</h1>
-        <p>의심되는 URL과 내 사진을 대조하여 분석을 시작합니다. (일일 한도 5건)</p> 
+        <p>의심되는 URL을 입력하면 등록된 모든 사진과 대조하여 분석을 시작합니다. (일일 한도 5건) </p> 
       </header>
 
-      {/* onSubmit에 handleSubmit 함수 연결 */}
       <form className="detect-form" onSubmit={handleSubmit}>
         <div className="section">
           <label><Search size={16} /> 의심 URL 입력</label> 
@@ -67,31 +63,28 @@ const DetectRequest = ({ registeredPhotos, jobs, setJobs }) => {
           />
         </div>
 
+        {/* 등록된 사진 정보 */}
         <div className="section">
-          <label><Upload size={16} /> 분석 대상 사진 선택 </label> 
-          <select 
-            className="face-select-dropdown" 
-            value={selectedPhotoId} 
-            onChange={(e) => setSelectedPhotoId(e.target.value)}
-            required
-          >
-            <option value="">등록 사진을 선택하세요</option>
-            {registeredPhotos.map(photo => (
-              <option key={photo.id} value={photo.id}>
-                {photo.name || `내 사진 (${photo.date})`}
-              </option>
-            ))}
-          </select>
-          
-          {selectedPhoto && (
-            <div className="selected-preview-min" style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '10px' }}>
-              <img src={selectedPhoto.url} alt="Thumbnail" style={{ width: '50px', borderRadius: '8px' }} />
-              <span style={{ fontSize: '13px', color: '#5C5CFF' }}>이 사진으로 분석을 진행합니다.</span>
+          <label><ShieldCheck size={16} /> 분석 대상 안내</label>
+          <div className="selected-preview-min" style={{ display: 'flex', alignItems: 'center', gap: '15px', marginTop: '10px', padding: '15px', background: '#f8f9fa', borderRadius: '12px' }}>
+            <div style={{ display: 'flex', gap: '5px' }}>
+              {registeredPhotos.slice(0, 5).map(photo => (
+                <img 
+                  key={photo.id} 
+                  src={photo.url} 
+                  alt="Thumbnail" 
+                  style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #ddd' }} 
+                />
+              ))}
             </div>
-          )}
+            <div style={{ fontSize: '13px', color: '#5C5CFF', lineHeight: '1.4' }}>
+              현재 등록된 <strong>{registeredPhotos.length}장</strong>의 사진으로 <br/>
+              실시간 교차 분석을 진행합니다. 
+            </div>
+          </div>
         </div>
 
-        <button type="submit" className="btn-submit" disabled={!url || !selectedPhotoId}>
+        <button type="submit" className="btn-submit" disabled={!url}>
           탐지 요청 제출하기
         </button>
       </form>
