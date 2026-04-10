@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends
 from typing import List, Optional
 from app.schemas.metadata import MetadataCreate 
 from app.schemas.detection import DetectionRequest, DetectionResponse, DetectionDetailResponse
@@ -7,6 +7,7 @@ import uuid
 import asyncio
 import random
 from datetime import datetime
+from app.api.v1.dependencies import get_current_user
 
 router = APIRouter()
 
@@ -49,14 +50,19 @@ async def run_analysis_and_update(task_id: str, url: str):
 
 # 탐지 요청 엔드포인트
 @router.post("/analyze", response_model=DetectionResponse, summary="Detection Request")
-async def analyze_content(request_in: DetectionRequest):
+async def analyze_content(
+    request_in: DetectionRequest,
+    current_user: dict = Depends(get_current_user) # 여기서 토큰 검사 및 유저 추출 
+):
     
     # 가짜 작업 ID 생성 
     task_id = str(uuid.uuid4())
     
-    # 1. DB에 초기 기록 남기기 (처리 중 상태)
+    # 1. DB 저장
     new_task = {
         "task_id": task_id,
+        "user_id": str(current_user["_id"]), # 로그인한 유저의 실제 DB 고유 ID
+        "user_email": current_user["email"], # 관리용 이메일
         "url": str(request_in.url),
         "target_name": request_in.target_name,
         "status": "processing",
@@ -74,23 +80,35 @@ async def analyze_content(request_in: DetectionRequest):
         "result": None
     }
 
+
+
 # 수집 데이터 저장 요청 엔드포인트
 @router.post("/metadata", status_code=status.HTTP_201_CREATED, summary="Receive Metadata")
 async def receive_engine_metadata(metadata_in: MetadataCreate):
-
     try:
         metadata_dict = metadata_in.model_dump()
         
-        # MongoDB는 Pydantic의 HttpUrl 객체를 바로 저장 못하므로 문자열 변환
+        # 1. task_id가 실제로 존재하는지 확인
+        task_exists = await db_instance.db.detection_tasks.find_one({"task_id": metadata_dict["task_id"]})
+        if not task_exists:
+            raise HTTPException(
+                status_code=404, 
+                detail=f"Task ID {metadata_dict['task_id']} not found. Metadata cannot be linked."
+            )
+
+        # 2. MongoDB 호환을 위한 URL 문자열 변환
         metadata_dict["target_url"] = str(metadata_dict["target_url"])
         
-        # 'metadata' 컬렉션에 저장
+        # 3. 'metadata' 컬렉션에 저장
         result = await db_instance.db.metadata.insert_one(metadata_dict)
         
         return {
-            "message": "Metadata saved successfully",
+            "message": "Metadata saved successfully and linked to task",
+            "task_id": metadata_dict["task_id"], # 연결된 ID를 응답에 포함
             "db_id": str(result.inserted_id)
         }
+    except HTTPException as he:
+        raise he
     except Exception as e:
         raise HTTPException(
             status_code=500,
@@ -98,19 +116,27 @@ async def receive_engine_metadata(metadata_in: MetadataCreate):
         )
         
         
+        
 # 전체 탐지 목록 조회
 @router.get("/history", response_model=List[DetectionDetailResponse], summary="Get Detection History")
-async def get_detection_history():
+async def get_detection_history(
+    current_user: dict = Depends(get_current_user) # 1. [인증] 누구인지 확인
+):
 
-    # 생성일(created_at) 기준 내림차순(-1) 정렬
-    cursor = db_instance.db.detection_tasks.find().sort("created_at", -1)
-    tasks = await cursor.to_list(length=100) # 최근 100개까지만
+    # 2. 로그인한 유저의 고유 ID 추출
+    user_id = str(current_user["_id"])
+    
+    # 3. [인가] 내 데이터만 조회하도록 필터링
+    cursor = db_instance.db.detection_tasks.find({"user_id": user_id}).sort("created_at", -1)
+    
+    tasks = await cursor.to_list(length=100)
     
     return tasks
 
 
+
 # 특정 작업 상세 조회 (새로고침용)
-@router.get("/result/{task_id}", response_model=DetectionDetailResponse, summary="Get Specific Result")
+@router.get("/summary-report/{task_id}", response_model=DetectionDetailResponse, summary="Get Summary Result")
 async def get_specific_result(task_id: str):
 
     task = await db_instance.db.detection_tasks.find_one({"task_id": task_id})
@@ -119,3 +145,40 @@ async def get_specific_result(task_id: str):
         raise HTTPException(status_code=404, detail="해당 작업을 찾을 수 없습니다.")
     
     return task
+
+
+# 통합 조회 API
+@router.get("/full-report/{task_id}", summary="Get Full Analysis Result")
+async def get_full_report(
+    task_id: str,
+    current_user: dict = Depends(get_current_user) # 1. [인증] 누가 보려고 하는지 확인
+):
+    # 2. 'detection_tasks'에서 해당 task_id 찾기
+    task = await db_instance.db.detection_tasks.find_one({"task_id": task_id})
+    
+    if not task:
+        raise HTTPException(
+            status_code=404, 
+            detail=f"해당 Task_id를 찾을 수 없습니다."
+        )
+
+    # 3. [인가] 핵심 보안 체크
+    if task.get("user_id") != str(current_user["_id"]):
+        raise HTTPException(
+            status_code=403, # 인증된 사용자이지만, 이 데이터에 접근 권한은 없을 경우
+            detail="해당 리포트에 접근 권한이 없습니다."
+        )
+
+    # 4. 권한이 확인된 경우에만 상세 정보(metadata) 가져오기
+    metadata = await db_instance.db.metadata.find_one({"task_id": task_id})
+    
+    # JSON 변환을 위해 _id 문자열 처리
+    task["_id"] = str(task["_id"])
+    if metadata:
+        metadata["_id"] = str(metadata["_id"])
+        
+    return {
+        "task_id": task_id,
+        "analysis_result": task,
+        "server_details": metadata
+    }

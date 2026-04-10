@@ -1,10 +1,11 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import  Depends, APIRouter, HTTPException
 from app.schemas.user import UserCreate, UserResponse, UserUpdate, UserLogin
 from app.core.database import db_instance
 from app.core.security import get_password_hash
 from app.core.security import verify_password
 from app.core.security import create_access_token
 from bson import ObjectId # 몽고디비 ID 변환용
+from fastapi.security import OAuth2PasswordRequestForm
 
 router = APIRouter()
 
@@ -105,15 +106,15 @@ async def delete_user(user_id: str):
 
 
 @router.post("/login")
-async def login(user_in: UserLogin):
+async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     
-    # 1. 이메일로 유저 찾기
-    user = await db_instance.db.users.find_one({"email": user_in.email})
+    # 1. 이메일(username)로 유저 찾기
+    user = await db_instance.db.users.find_one({"email": form_data.username})
     if not user:
         raise HTTPException(status_code=401, detail="이메일 또는 비밀번호가 잘못되었습니다.")
 
-    # 2. 비밀번호 검증 (입력값 vs DB 해시값)
-    if not verify_password(user_in.password, user["hashed_password"]):
+    # 2. 비밀번호 검증 (user_in.password -> form_data.password로 수정)
+    if not verify_password(form_data.password, user["hashed_password"]):
         raise HTTPException(status_code=401, detail="이메일 또는 비밀번호가 잘못되었습니다.")
 
     # 3. JWT 토큰 생성
